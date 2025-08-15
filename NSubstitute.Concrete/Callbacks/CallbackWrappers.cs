@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
 
-namespace NSubstitute.Concrete;
+namespace NSubstitute.Concrete.Callbacks;
 
 /// <summary>
 /// Base interface for all wrapper types
@@ -46,7 +46,7 @@ public class CallbackWrapper<T1> : ICallbackWrapper
 
     public object Execute(object[] arguments)
     {
-        var arg1 = arguments.Length > 0 ? (T1)arguments[0] : default(T1);
+        var arg1 = arguments.Length > 0 ? (T1)arguments[0] : default;
         _callback(arg1);
 
         // For non-void methods, return a default value
@@ -84,8 +84,8 @@ public class CallbackWrapperT1T2<T1, T2> : ICallbackWrapper
 
     public object Execute(object[] arguments)
     {
-        var arg1 = arguments.Length > 0 ? (T1)arguments[0] : default(T1);
-        var arg2 = arguments.Length > 1 ? (T2)arguments[1] : default(T2);
+        var arg1 = arguments.Length > 0 ? (T1)arguments[0] : default;
+        var arg2 = arguments.Length > 1 ? (T2)arguments[1] : default;
         _callback(arg1, arg2);
 
         // For non-void methods, return a default value
@@ -123,9 +123,9 @@ public class CallbackWrapperT1T2T3<T1, T2, T3> : ICallbackWrapper
 
     public object Execute(object[] arguments)
     {
-        var arg1 = arguments.Length > 0 ? (T1)arguments[0] : default(T1);
-        var arg2 = arguments.Length > 1 ? (T2)arguments[1] : default(T2);
-        var arg3 = arguments.Length > 2 ? (T3)arguments[2] : default(T3);
+        var arg1 = arguments.Length > 0 ? (T1)arguments[0] : default;
+        var arg2 = arguments.Length > 1 ? (T2)arguments[1] : default;
+        var arg3 = arguments.Length > 2 ? (T3)arguments[2] : default;
         _callback(arg1, arg2, arg3);
 
         // For non-void methods, return a default value
@@ -179,7 +179,7 @@ public class FunctionCallbackWrapper<T1, TResult> : ICallbackWrapper
 
     public object Execute(object[] arguments)
     {
-        var arg1 = arguments.Length > 0 ? (T1)arguments[0] : default(T1);
+        var arg1 = arguments.Length > 0 ? (T1)arguments[0] : default;
         return _callback(arg1);
     }
 }
@@ -198,8 +198,8 @@ public class FunctionCallbackWrapperT1T2<T1, T2, TResult> : ICallbackWrapper
 
     public object Execute(object[] arguments)
     {
-        var arg1 = arguments.Length > 0 ? (T1)arguments[0] : default(T1);
-        var arg2 = arguments.Length > 1 ? (T2)arguments[1] : default(T2);
+        var arg1 = arguments.Length > 0 ? (T1)arguments[0] : default;
+        var arg2 = arguments.Length > 1 ? (T2)arguments[1] : default;
         return _callback(arg1, arg2);
     }
 }
@@ -218,9 +218,9 @@ public class FunctionCallbackWrapperT1T2T3<T1, T2, T3, TResult> : ICallbackWrapp
 
     public object Execute(object[] arguments)
     {
-        var arg1 = arguments.Length > 0 ? (T1)arguments[0] : default(T1);
-        var arg2 = arguments.Length > 1 ? (T2)arguments[1] : default(T2);
-        var arg3 = arguments.Length > 2 ? (T3)arguments[2] : default(T3);
+        var arg1 = arguments.Length > 0 ? (T1)arguments[0] : default;
+        var arg2 = arguments.Length > 1 ? (T2)arguments[1] : default;
+        var arg3 = arguments.Length > 2 ? (T3)arguments[2] : default;
         return _callback(arg1, arg2, arg3);
     }
 }
@@ -239,10 +239,10 @@ public class FunctionCallbackWrapperT1T2T3T4<T1, T2, T3, T4, TResult> : ICallbac
 
     public object Execute(object[] arguments)
     {
-        var arg1 = arguments.Length > 0 ? (T1)arguments[0] : default(T1);
-        var arg2 = arguments.Length > 1 ? (T2)arguments[1] : default(T2);
-        var arg3 = arguments.Length > 2 ? (T3)arguments[2] : default(T3);
-        var arg4 = arguments.Length > 3 ? (T4)arguments[3] : default(T4);
+        var arg1 = arguments.Length > 0 ? (T1)arguments[0] : default;
+        var arg2 = arguments.Length > 1 ? (T2)arguments[1] : default;
+        var arg3 = arguments.Length > 2 ? (T3)arguments[2] : default;
+        var arg4 = arguments.Length > 3 ? (T4)arguments[3] : default;
         return _callback(arg1, arg2, arg3, arg4);
     }
 }
@@ -284,7 +284,7 @@ public class CallbackAndReturnWrapperT1<T1, TResult> : ICallbackWrapper
 
     public object Execute(object[] arguments)
     {
-        var arg1 = arguments.Length > 0 ? (T1)arguments[0] : default(T1);
+        var arg1 = arguments.Length > 0 ? (T1)arguments[0] : default;
         _callback(arg1);
         return _valueFactory(arg1);
     }
@@ -322,7 +322,7 @@ public class AsyncCallbackWrapperT1<T1> : ICallbackWrapper
 
     public object Execute(object[] arguments)
     {
-        var arg1 = arguments.Length > 0 ? (T1)arguments[0] : default(T1);
+        var arg1 = arguments.Length > 0 ? (T1)arguments[0] : default;
         return _asyncCallback(arg1);
     }
 }
@@ -379,7 +379,7 @@ public class AsyncFunctionCallbackWrapperT1<T1, TResult> : ICallbackWrapper
 
     public object Execute(object[] arguments)
     {
-        var arg1 = arguments.Length > 0 ? (T1)arguments[0] : default(T1);
+        var arg1 = arguments.Length > 0 ? (T1)arguments[0] : default;
 
         if (_asyncCallback != null)
         {

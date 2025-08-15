@@ -4,8 +4,10 @@ using System.Linq;
 using System.Reflection;
 using System;
 using System.Threading.Tasks;
+using NSubstitute.Concrete.Utilities;
+using NSubstitute.Concrete.Callbacks;
 
-namespace NSubstitute.Concrete;
+namespace NSubstitute.Concrete.Core;
 
 /// <summary>
 /// Interceptor that routes method calls through our custom logic with callback support
@@ -101,7 +103,7 @@ public class ConcreteMethodInterceptor
         return CallBaseMethod(methodName, arguments);
     }
 
-    public  bool IsAsyncMethod(string methodName)
+    public bool IsAsyncMethod(string methodName)
     {
         if (_proxy == null) return false;
 
@@ -120,7 +122,7 @@ public class ConcreteMethodInterceptor
     private bool IsTaskType(Type type)
     {
         return type == typeof(Task) ||
-               (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(Task<>));
+               type.IsGenericType && type.GetGenericTypeDefinition() == typeof(Task<>);
     }
 
     private object WrapInTask(object value, Type expectedReturnType)

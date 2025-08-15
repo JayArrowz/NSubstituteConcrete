@@ -1,4 +1,4 @@
-﻿namespace NSubstitute.Concrete;
+﻿namespace NSubstitute.Concrete.Setup.Interfaces;
 
 /// <summary>
 /// Interface for property setup configuration

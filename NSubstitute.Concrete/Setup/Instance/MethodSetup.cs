@@ -1,8 +1,11 @@
-﻿using System;
+﻿using NSubstitute.Concrete.Callbacks;
+using NSubstitute.Concrete.Core;
+using NSubstitute.Concrete.Setup.Interfaces;
+using System;
 using System.Reflection;
 using System.Threading.Tasks;
 
-namespace NSubstitute.Concrete;
+namespace NSubstitute.Concrete.Setup.Instance;
 
 /// <summary>
 /// Implementation of method setup with full async support and callbacks
@@ -39,7 +42,7 @@ public class MethodSetup<T, TResult> : IMethodSetup<T, TResult> where T : class
             _interceptor.ConfigureReturn(_method, _arguments, value);
         }
 
-        return default(T);
+        return default;
     }
 
     public T Returns(params TResult[] values)
@@ -49,42 +52,42 @@ public class MethodSetup<T, TResult> : IMethodSetup<T, TResult> where T : class
             var sequence = new ValueSequence<TResult>(values);
             _interceptor.ConfigureReturn(_method, _arguments, sequence);
         }
-        return default(T);
+        return default;
     }
 
     public T Returns(Func<TResult> valueFactory)
     {
         var wrapper = new FunctionCallbackWrapper<TResult>(valueFactory);
         _interceptor.ConfigureReturn(_method, _arguments, wrapper);
-        return default(T);
+        return default;
     }
 
     public T Returns<T1>(Func<T1, TResult> valueFactory)
     {
         var wrapper = new FunctionCallbackWrapper<T1, TResult>(valueFactory);
         _interceptor.ConfigureReturn(_method, _arguments, wrapper);
-        return default(T);
+        return default;
     }
 
     public T Returns<T1, T2>(Func<T1, T2, TResult> valueFactory)
     {
         var wrapper = new FunctionCallbackWrapperT1T2<T1, T2, TResult>(valueFactory);
         _interceptor.ConfigureReturn(_method, _arguments, wrapper);
-        return default(T);
+        return default;
     }
 
     public T Returns<T1, T2, T3>(Func<T1, T2, T3, TResult> valueFactory)
     {
         var wrapper = new FunctionCallbackWrapperT1T2T3<T1, T2, T3, TResult>(valueFactory);
         _interceptor.ConfigureReturn(_method, _arguments, wrapper);
-        return default(T);
+        return default;
     }
 
     public T Returns<T1, T2, T3, T4>(Func<T1, T2, T3, T4, TResult> valueFactory)
     {
         var wrapper = new FunctionCallbackWrapperT1T2T3T4<T1, T2, T3, T4, TResult>(valueFactory);
         _interceptor.ConfigureReturn(_method, _arguments, wrapper);
-        return default(T);
+        return default;
     }
 
     // New callback methods
@@ -92,56 +95,56 @@ public class MethodSetup<T, TResult> : IMethodSetup<T, TResult> where T : class
     {
         var wrapper = new CallbackWrapper(callback);
         _interceptor.ConfigureReturn(_method, _arguments, wrapper);
-        return default(T);
+        return default;
     }
 
     public T Callback<T1>(Action<T1> callback)
     {
         var wrapper = new CallbackWrapper<T1>(callback);
         _interceptor.ConfigureReturn(_method, _arguments, wrapper);
-        return default(T);
+        return default;
     }
 
     public T Callback<T1, T2>(Action<T1, T2> callback)
     {
         var wrapper = new CallbackWrapperT1T2<T1, T2>(callback);
         _interceptor.ConfigureReturn(_method, _arguments, wrapper);
-        return default(T);
+        return default;
     }
 
     public T Callback<T1, T2, T3>(Action<T1, T2, T3> callback)
     {
         var wrapper = new CallbackWrapperT1T2T3<T1, T2, T3>(callback);
         _interceptor.ConfigureReturn(_method, _arguments, wrapper);
-        return default(T);
+        return default;
     }
 
     public T ReturnsAndCallback(TResult value, Action callback)
     {
         var wrapper = new CallbackAndReturnWrapper<TResult>(value, callback);
         _interceptor.ConfigureReturn(_method, _arguments, wrapper);
-        return default(T);
+        return default;
     }
 
     public T ReturnsAndCallback<T1>(Func<T1, TResult> valueFactory, Action<T1> callback)
     {
         var wrapper = new CallbackAndReturnWrapperT1<T1, TResult>(valueFactory, callback);
         _interceptor.ConfigureReturn(_method, _arguments, wrapper);
-        return default(T);
+        return default;
     }
 
     public T Throws<TException>() where TException : Exception, new()
     {
         var wrapper = new ExceptionWrapper<TException>();
         _interceptor.ConfigureReturn(_method, _arguments, wrapper);
-        return default(T);
+        return default;
     }
 
     public T Throws<TException>(TException exception) where TException : Exception
     {
         var wrapper = new ExceptionWrapper<TException>(exception);
         _interceptor.ConfigureReturn(_method, _arguments, wrapper);
-        return default(T);
+        return default;
     }
 
     public T ReturnsInOrder(params TResult[] values)
@@ -161,7 +164,7 @@ public class MethodSetup<T, TResult> : IMethodSetup<T, TResult> where T : class
             var wrapper = new FunctionCallbackWrapper<TResult>(() => asyncFactory().GetAwaiter().GetResult());
             _interceptor.ConfigureReturn(_method, _arguments, wrapper);
         }
-        return default(T);
+        return default;
     }
 
     public T Returns<T1>(Func<T1, Task<TResult>> asyncFactory)
@@ -176,27 +179,27 @@ public class MethodSetup<T, TResult> : IMethodSetup<T, TResult> where T : class
             var wrapper = new FunctionCallbackWrapper<T1, TResult>(arg => asyncFactory(arg).GetAwaiter().GetResult());
             _interceptor.ConfigureReturn(_method, _arguments, wrapper);
         }
-        return default(T);
+        return default;
     }
 
     public T CallbackAsync(Func<Task> asyncCallback)
     {
         var wrapper = new AsyncCallbackWrapper(asyncCallback);
         _interceptor.ConfigureReturn(_method, _arguments, wrapper);
-        return default(T);
+        return default;
     }
 
     public T CallbackAsync<T1>(Func<T1, Task> asyncCallback)
     {
         var wrapper = new AsyncCallbackWrapperT1<T1>(asyncCallback);
         _interceptor.ConfigureReturn(_method, _arguments, wrapper);
-        return default(T);
+        return default;
     }
 
     private bool IsAsyncMethod(MethodInfo method)
     {
         return method.ReturnType == typeof(Task) ||
-               (method.ReturnType.IsGenericType && method.ReturnType.GetGenericTypeDefinition() == typeof(Task<>));
+               method.ReturnType.IsGenericType && method.ReturnType.GetGenericTypeDefinition() == typeof(Task<>);
     }
 
     private object WrapInTaskIfNeeded(TResult value, Type returnType)

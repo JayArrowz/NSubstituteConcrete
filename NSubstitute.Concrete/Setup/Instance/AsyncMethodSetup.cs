@@ -1,8 +1,11 @@
-﻿using System;
+﻿using NSubstitute.Concrete.Callbacks;
+using NSubstitute.Concrete.Core;
+using NSubstitute.Concrete.Setup.Interfaces;
+using System;
 using System.Reflection;
 using System.Threading.Tasks;
 
-namespace NSubstitute.Concrete;
+namespace NSubstitute.Concrete.Setup.Instance;
 
 /// <summary>
 /// Implementation of async method setup with automatic Task wrapping and callbacks
@@ -24,48 +27,48 @@ public class AsyncMethodSetup<T, TResult> : IAsyncMethodSetup<T, TResult> where 
     {
         var task = Task.FromResult(value);
         _interceptor.ConfigureReturn(_method, _arguments, task);
-        return default(T);
+        return default;
     }
 
     public T Returns(Task<TResult> task)
     {
         _interceptor.ConfigureReturn(_method, _arguments, task);
-        return default(T);
+        return default;
     }
 
     public T Returns(Func<TResult> valueFactory)
     {
         var wrapper = new AsyncFunctionCallbackWrapper<TResult>(valueFactory);
         _interceptor.ConfigureReturn(_method, _arguments, wrapper);
-        return default(T);
+        return default;
     }
 
     public T Returns<T1>(Func<T1, TResult> valueFactory)
     {
         var wrapper = new AsyncFunctionCallbackWrapperT1<T1, TResult>(valueFactory);
         _interceptor.ConfigureReturn(_method, _arguments, wrapper);
-        return default(T);
+        return default;
     }
 
     public T Returns(Func<Task<TResult>> asyncFactory)
     {
         var wrapper = new AsyncFunctionCallbackWrapper<TResult>(asyncFactory);
         _interceptor.ConfigureReturn(_method, _arguments, wrapper);
-        return default(T);
+        return default;
     }
 
     public T Returns<T1>(Func<T1, Task<TResult>> asyncFactory)
     {
         var wrapper = new AsyncFunctionCallbackWrapperT1<T1, TResult>(asyncFactory);
         _interceptor.ConfigureReturn(_method, _arguments, wrapper);
-        return default(T);
+        return default;
     }
 
     public T Callback(Action callback)
     {
         var task = Task.Run(callback);
         _interceptor.ConfigureReturn(_method, _arguments, task);
-        return default(T);
+        return default;
     }
 
     public T Callback<T1>(Action<T1> callback)
@@ -76,14 +79,14 @@ public class AsyncMethodSetup<T, TResult> : IAsyncMethodSetup<T, TResult> where 
             return Task.CompletedTask;
         });
         _interceptor.ConfigureReturn(_method, _arguments, wrapper);
-        return default(T);
+        return default;
     }
 
     private bool IsAsyncMethod(MethodInfo method)
     {
         return method.ReturnType == typeof(Task) ||
-               (method.ReturnType.IsGenericType &&
-                method.ReturnType.GetGenericTypeDefinition() == typeof(Task<>));
+               method.ReturnType.IsGenericType &&
+                method.ReturnType.GetGenericTypeDefinition() == typeof(Task<>);
     }
 
     public T CallbackAsync(Func<Task> asyncCallback)
@@ -102,14 +105,14 @@ public class AsyncMethodSetup<T, TResult> : IAsyncMethodSetup<T, TResult> where 
             var wrapper = new AsyncCallbackWrapper(asyncCallback);
             _interceptor.ConfigureReturn(_method, _arguments, wrapper);
         }
-        return default(T);
+        return default;
     }
 
     public T CallbackAsync<T1>(Func<T1, Task> asyncCallback)
     {
         var wrapper = new AsyncCallbackWrapperT1<T1>(asyncCallback);
         _interceptor.ConfigureReturn(_method, _arguments, wrapper);
-        return default(T);
+        return default;
     }
 
     public T ReturnsAndCallback(TResult value, Action callback)
@@ -120,14 +123,14 @@ public class AsyncMethodSetup<T, TResult> : IAsyncMethodSetup<T, TResult> where 
             return value;
         });
         _interceptor.ConfigureReturn(_method, _arguments, task);
-        return default(T);
+        return default;
     }
 
     public T ReturnsAndCallbackAsync(TResult value, Func<Task> asyncCallback)
     {
         var task = asyncCallback().ContinueWith(_ => value);
         _interceptor.ConfigureReturn(_method, _arguments, task);
-        return default(T);
+        return default;
     }
 
     public T Throws<TException>() where TException : Exception, new()
@@ -135,14 +138,14 @@ public class AsyncMethodSetup<T, TResult> : IAsyncMethodSetup<T, TResult> where 
         var exception = new TException();
         var faultedTask = Task.FromException<TResult>(exception);
         _interceptor.ConfigureReturn(_method, _arguments, faultedTask);
-        return default(T);
+        return default;
     }
 
     public T Throws<TException>(TException exception) where TException : Exception
     {
         var faultedTask = Task.FromException<TResult>(exception);
         _interceptor.ConfigureReturn(_method, _arguments, faultedTask);
-        return default(T);
+        return default;
     }
 
     public T ReturnsInOrder(params TResult[] values)
@@ -155,6 +158,6 @@ public class AsyncMethodSetup<T, TResult> : IAsyncMethodSetup<T, TResult> where 
 
         var sequence = new ValueSequence<Task<TResult>>(taskValues);
         _interceptor.ConfigureReturn(_method, _arguments, sequence);
-        return default(T);
+        return default;
     }
 }

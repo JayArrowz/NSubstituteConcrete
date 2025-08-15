@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
 
-namespace NSubstitute.Concrete;
+namespace NSubstitute.Concrete.Statics;
 
 /// <summary>
 /// Interface for static method setup configuration

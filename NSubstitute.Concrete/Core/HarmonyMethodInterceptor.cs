@@ -3,8 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using HarmonyLib;
+using NSubstitute.Concrete.Utilities;
 
-namespace NSubstitute.Concrete;
+namespace NSubstitute.Concrete.Core;
 
 /// <summary>
 /// Harmony-based method interceptor that patches methods at runtime

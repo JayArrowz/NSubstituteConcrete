@@ -1,4 +1,7 @@
-﻿namespace NSubstitute.Concrete;
+﻿using NSubstitute.Concrete.Core;
+using NSubstitute.Concrete.Statics;
+
+namespace NSubstitute.Concrete.Cleanup;
 
 /// <summary>
 /// Extension methods for cleanup and resource management with Harmony support
@@ -40,7 +43,7 @@ public static class ConcreteCleanupExtensions
         return new CleanupDiagnostics
         {
             ActiveSubstituteCount = ConcreteExtensions.GetInterceptorCount(),
-            CachedProxyTypeCount = SubstituteExtensions.GetInterceptorCount(), // Harmony interceptors
+            CachedProxyTypeCount = NSubstituteExtensions.GetInterceptorCount(), // Harmony interceptors
             StaticMethodCount = staticDiagnostics.PatchedMethodCount
         };
     }
@@ -50,6 +53,6 @@ public static class ConcreteCleanupExtensions
     /// </summary>
     public static void ClearAllHarmonyPatches()
     {
-        SubstituteExtensions.ClearAllInterceptors();
+        NSubstituteExtensions.ClearAllInterceptors();
     }
 }

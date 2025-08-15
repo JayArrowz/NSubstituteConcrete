@@ -1,4 +1,4 @@
-﻿namespace NSubstitute.Concrete;
+﻿namespace NSubstitute.Concrete.Cleanup;
 
 /// <summary>
 /// Diagnostic information for monitoring memory usage with Harmony support

@@ -1,4 +1,6 @@
-﻿using NSubstitute.Core.Arguments;
+﻿using NSubstitute.Concrete.Setup.Instance;
+using NSubstitute.Concrete.Setup.Interfaces;
+using NSubstitute.Core.Arguments;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -7,7 +9,7 @@ using System.Linq.Expressions;
 using System.Reflection;
 using System.Threading.Tasks;
 
-namespace NSubstitute.Concrete;
+namespace NSubstitute.Concrete.Core;
 
 /// <summary>
 /// Extension methods to provide NSubstitute-like syntax for concrete substitutes with auto-patching
@@ -399,7 +401,7 @@ where T : class
         }
 
         // Also cleanup from Harmony registry if applicable
-        SubstituteExtensions.UnregisterInterceptor(substitute);
+        NSubstituteExtensions.UnregisterInterceptor(substitute);
     }
 
     /// <summary>
@@ -414,7 +416,7 @@ where T : class
         _interceptors.Clear();
 
         // Also clear Harmony registry
-        SubstituteExtensions.ClearAllInterceptors();
+        NSubstituteExtensions.ClearAllInterceptors();
     }
 
     /// <summary>

@@ -1,4 +1,6 @@
 ﻿using FluentAssertions;
+using NSubstitute.Concrete.Statics;
+using NSubstitute.Concrete.Utilities;
 
 namespace NSubstitute.Concrete.Test;
 

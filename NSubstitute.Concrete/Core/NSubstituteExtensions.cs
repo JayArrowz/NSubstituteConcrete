@@ -1,12 +1,12 @@
 ﻿using System;
 using System.Collections.Concurrent;
 
-namespace NSubstitute.Concrete;
+namespace NSubstitute.Concrete.Core;
 
 /// <summary>
 /// Extension to NSubstitute that enables mocking of concrete classes using Harmony runtime patching
 /// </summary>
-public static class SubstituteExtensions
+public static class NSubstituteExtensions
 {
     private static readonly ConcurrentDictionary<object, HarmonyMethodInterceptor> _interceptors
         = new ConcurrentDictionary<object, HarmonyMethodInterceptor>();

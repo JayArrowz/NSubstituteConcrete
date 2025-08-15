@@ -4,8 +4,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using HarmonyLib;
+using NSubstitute.Concrete.Callbacks;
+using NSubstitute.Concrete.Utilities;
 
-namespace NSubstitute.Concrete;
+namespace NSubstitute.Concrete.Statics;
 
 /// <summary>
 /// Global interceptor for static method substitution using Harmony

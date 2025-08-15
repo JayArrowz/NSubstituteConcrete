@@ -2,7 +2,7 @@
 
 using System;
 
-namespace NSubstitute.Concrete;
+namespace NSubstitute.Concrete.Utilities;
 
 /// <summary>
 /// Represents a method call for verification

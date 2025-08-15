@@ -1,8 +1,11 @@
-﻿using System;
+﻿using NSubstitute.Concrete.Callbacks;
+using NSubstitute.Concrete.Core;
+using NSubstitute.Concrete.Setup.Interfaces;
+using System;
 using System.Reflection;
 using System.Threading.Tasks;
 
-namespace NSubstitute.Concrete;
+namespace NSubstitute.Concrete.Setup.Instance;
 
 public class VoidMethodSetup<T> : IVoidMethodSetup<T> where T : class
 {

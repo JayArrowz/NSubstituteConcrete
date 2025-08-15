@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
 
-namespace NSubstitute.Concrete;
+namespace NSubstitute.Concrete.Setup.Interfaces;
 
 /// <summary>
 /// Interface for void async method setup configuration with full callback support

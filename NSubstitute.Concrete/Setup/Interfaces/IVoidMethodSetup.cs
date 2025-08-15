@@ -1,7 +1,7 @@
 ﻿using System.Threading.Tasks;
 using System;
 
-namespace NSubstitute.Concrete;
+namespace NSubstitute.Concrete.Setup.Interfaces;
 
 public interface IVoidMethodSetup<T> where T : class
 {

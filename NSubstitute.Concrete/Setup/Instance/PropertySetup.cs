@@ -1,6 +1,8 @@
-﻿using System.Reflection;
+﻿using NSubstitute.Concrete.Core;
+using NSubstitute.Concrete.Setup.Interfaces;
+using System.Reflection;
 
-namespace NSubstitute.Concrete;
+namespace NSubstitute.Concrete.Setup.Instance;
 
 /// <summary>
 /// Implementation of property setup
@@ -19,6 +21,6 @@ public class PropertySetup<T, TResult> : IPropertySetup<T, TResult> where T : cl
     public T Returns(TResult value)
     {
         _interceptor.ConfigureProperty(_property.Name, value);
-        return default(T);
+        return default;
     }
 }

@@ -1,8 +1,9 @@
-﻿using System;
+﻿using NSubstitute.Concrete.Callbacks;
+using System;
 using System.Reflection;
 using System.Threading.Tasks;
 
-namespace NSubstitute.Concrete;
+namespace NSubstitute.Concrete.Statics;
 
 /// <summary>
 /// Implementation of static method setup with return values
@@ -394,7 +395,8 @@ public class StaticVoidAsyncMethodSetup : IStaticVoidAsyncMethodSetup
 
     public void DelayAndCallbackAsync(TimeSpan delay, Func<Task> asyncCallback)
     {
-        Func<Task> taskFactory = async () => {
+        Func<Task> taskFactory = async () =>
+        {
             await Task.Delay(delay);
             await asyncCallback();
         };
