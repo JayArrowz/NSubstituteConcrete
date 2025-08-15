@@ -5,7 +5,9 @@ branches:
     mode: ContinuousDelivery
     label: ''
     increment: Patch
-    prevent-increment-when-current-commit-has-been-merged: true
+    prevent-increment:
+      of-merged-branch: true
+      when-current-commit-tagged: false
     track-merge-target: false
     tracks-release-branches: false
     is-release-branch: false
@@ -15,7 +17,9 @@ branches:
     mode: ContinuousDeployment
     label: alpha
     increment: Minor
-    prevent-increment-when-current-commit-has-been-merged: false
+    prevent-increment:
+      of-merged-branch: false
+      when-current-commit-tagged: false
     track-merge-target: true
     tracks-release-branches: true
     is-release-branch: false
@@ -25,7 +29,9 @@ branches:
     mode: ContinuousDelivery
     label: beta
     increment: Patch
-    prevent-increment-when-current-commit-has-been-merged: true
+    prevent-increment:
+      of-merged-branch: true
+      when-current-commit-tagged: false
     track-merge-target: false
     tracks-release-branches: false
     is-release-branch: true
@@ -35,7 +41,9 @@ branches:
     mode: ContinuousDeployment
     label: useBranchName
     increment: Inherit
-    prevent-increment-when-current-commit-has-been-merged: false
+    prevent-increment:
+      of-merged-branch: false
+      when-current-commit-tagged: false
     track-merge-target: false
     tracks-release-branches: false
     is-release-branch: false
@@ -45,7 +53,9 @@ branches:
     mode: ContinuousDeployment
     label: PullRequest
     increment: Inherit
-    prevent-increment-when-current-commit-has-been-merged: false
+    prevent-increment:
+      of-merged-branch: false
+      when-current-commit-tagged: false
     track-merge-target: false
     tracks-release-branches: false
     is-release-branch: false
@@ -55,7 +65,9 @@ branches:
     mode: ContinuousDeployment
     label: beta
     increment: Patch
-    prevent-increment-when-current-commit-has-been-merged: false
+    prevent-increment:
+      of-merged-branch: false
+      when-current-commit-tagged: false
     track-merge-target: false
     tracks-release-branches: false
     is-release-branch: false
