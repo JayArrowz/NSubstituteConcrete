@@ -5,6 +5,7 @@ using NSubstitute.Concrete.Utilities;
 
 namespace NSubstitute.Concrete.Test;
 
+[CollectionDefinition("Static Tests", DisableParallelization = true)]
 public class StaticMethodTests
 {
     public StaticMethodTests()
