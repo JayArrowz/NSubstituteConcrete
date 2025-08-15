@@ -1,0 +1,172 @@
+name: Release
+
+on:
+  release:
+    types: [published]
+
+env:
+  DOTNET_VERSION: '8.0.x'
+  DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
+  DOTNET_CLI_TELEMETRY_OPTOUT: true
+
+jobs:
+  validate-release:
+    name: Validate Release
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: ${{ env.DOTNET_VERSION }}
+
+    - name: Restore dependencies
+      run: dotnet restore
+
+    - name: Build
+      run: dotnet build --no-restore --configuration Release
+
+    - name: Test
+      run: dotnet test --no-build --configuration Release --verbosity normal
+
+    - name: Validate version format
+      run: |
+        if [[ ! "${{ github.event.release.tag_name }}" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-[a-zA-Z0-9-]+)?$ ]]; then
+          echo "❌ Invalid tag format. Expected: v1.0.0 or v1.0.0-preview"
+          exit 1
+        fi
+        echo "✅ Tag format is valid: ${{ github.event.release.tag_name }}"
+
+  publish-nuget:
+    name: Publish to NuGet
+    runs-on: ubuntu-latest
+    needs: validate-release
+    environment: production
+    
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: ${{ env.DOTNET_VERSION }}
+
+    - name: Install GitVersion
+      uses: gittools/actions/gitversion/setup@v0.10.2
+      with:
+        versionSpec: '5.x'
+
+    - name: Determine Version
+      id: gitversion
+      uses: gittools/actions/gitversion/execute@v0.10.2
+      with:
+        useConfigFile: true
+
+    - name: Extract version from tag
+      id: extract_version
+      run: |
+        TAG_VERSION=${{ github.event.release.tag_name }}
+        VERSION=${TAG_VERSION#v}
+        echo "version=$VERSION" >> $GITHUB_OUTPUT
+        echo "Version extracted: $VERSION"
+
+    - name: Restore dependencies
+      run: dotnet restore
+
+    - name: Build
+      run: dotnet build --no-restore --configuration Release /p:Version=${{ steps.extract_version.outputs.version }} /p:AssemblyVersion=${{ steps.extract_version.outputs.version }} /p:InformationalVersion=${{ steps.extract_version.outputs.version }}
+
+    - name: Test
+      run: dotnet test --no-build --configuration Release --verbosity normal
+
+    - name: Pack
+      run: dotnet pack --no-build --configuration Release --output ./artifacts /p:PackageVersion=${{ steps.extract_version.outputs.version }}
+
+    - name: Validate package
+      run: |
+        echo "📦 Validating NuGet package..."
+        ls -la ./artifacts/
+        
+        # Check if package was created
+        if [ ! -f ./artifacts/*.nupkg ]; then
+          echo "❌ No .nupkg file found"
+          exit 1
+        fi
+        
+        # Display package info
+        dotnet nuget verify ./artifacts/*.nupkg
+        echo "✅ Package validation complete"
+
+    - name: Publish to NuGet.org
+      env:
+        NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
+      run: |
+        echo "🚀 Publishing to NuGet.org..."
+        dotnet nuget push ./artifacts/*.nupkg \
+          --api-key $NUGET_API_KEY \
+          --source https://api.nuget.org/v3/index.json \
+          --skip-duplicate \
+          --no-symbols
+
+    - name: Upload artifacts to release
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        echo "📎 Uploading artifacts to GitHub release..."
+        gh release upload ${{ github.event.release.tag_name }} ./artifacts/*.nupkg
+
+    - name: Create deployment summary
+      run: |
+        echo "## 🚀 Deployment Summary" >> $GITHUB_STEP_SUMMARY
+        echo "| Item | Value |" >> $GITHUB_STEP_SUMMARY
+        echo "|------|-------|" >> $GITHUB_STEP_SUMMARY
+        echo "| **Version** | \`${{ steps.extract_version.outputs.version }}\` |" >> $GITHUB_STEP_SUMMARY
+        echo "| **Tag** | \`${{ github.event.release.tag_name }}\` |" >> $GITHUB_STEP_SUMMARY
+        echo "| **NuGet Package** | [NSubstitute.Concrete v${{ steps.extract_version.outputs.version }}](https://www.nuget.org/packages/NSubstitute.Concrete/${{ steps.extract_version.outputs.version }}) |" >> $GITHUB_STEP_SUMMARY
+        echo "| **Release** | [${{ github.event.release.name }}](${{ github.event.release.html_url }}) |" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "### 📦 Published Packages" >> $GITHUB_STEP_SUMMARY
+        echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+        ls -la ./artifacts/ >> $GITHUB_STEP_SUMMARY
+        echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+
+  notify-success:
+    name: Notify Success
+    runs-on: ubuntu-latest
+    needs: publish-nuget
+    if: success()
+    
+    steps:
+    - name: Extract version
+      id: extract_version
+      run: |
+        TAG_VERSION=${{ github.event.release.tag_name }}
+        VERSION=${TAG_VERSION#v}
+        echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+    - name: Notify success
+      run: |
+        echo "🎉 Successfully published NSubstitute.Concrete v${{ steps.extract_version.outputs.version }} to NuGet!"
+        echo "📦 Package: https://www.nuget.org/packages/NSubstitute.Concrete/${{ steps.extract_version.outputs.version }}"
+        echo "🏷️ Release: ${{ github.event.release.html_url }}"
+
+  notify-failure:
+    name: Notify Failure
+    runs-on: ubuntu-latest
+    needs: [validate-release, publish-nuget]
+    if: failure()
+    
+    steps:
+    - name: Notify failure
+      run: |
+        echo "❌ Release workflow failed for ${{ github.event.release.tag_name }}"
+        echo "🔍 Check the workflow logs for details"
+        echo "📝 Release: ${{ github.event.release.html_url }}"

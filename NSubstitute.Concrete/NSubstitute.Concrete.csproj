@@ -1,18 +1,64 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <TargetFramework>netstandard2.0</TargetFramework>
-    <LangVersion>12</LangVersion>
-  </PropertyGroup>
+	<PropertyGroup>
+		<TargetFramework>netstandard2.0</TargetFramework>
+		<LangVersion>12</LangVersion>
+		<PackageId>NSubstitute.Concrete</PackageId>
+		<Title>NSubstitute.Concrete</Title>
+		<Description>Extends NSubstitute to support mocking concrete classes and static methods using Harmony runtime patching. Mock non-virtual methods, static methods, and sealed classes with familiar NSubstitute syntax.</Description>
+		<Summary>Mock concrete classes and static methods with NSubstitute syntax using Harmony runtime patching</Summary>
+		<Authors>JayArrowz</Authors>
+		<Company>JayArrowz</Company>
+		<Product>NSubstitute.Concrete</Product>
+		<Copyright>Copyright © JayArrowz 2024</Copyright>
+		<PackageProjectUrl>https://github.com/JayArrowz/NSubstituteConcrete</PackageProjectUrl>
+		<RepositoryUrl>https://github.com/JayArrowz/NSubstituteConcrete</RepositoryUrl>
+		<RepositoryType>git</RepositoryType>
+		<PackageLicenseExpression>MIT</PackageLicenseExpression>
+		<PackageReadmeFile>README.md</PackageReadmeFile>
+		<PackageTags>nsubstitute;mocking;testing;concrete;static;harmony;unittest;tdd;mock;substitute</PackageTags>
+		<PackageReleaseNotes>See https://github.com/JayArrowz/NSubstituteConcrete/releases for release notes.</PackageReleaseNotes>
 
-  <ItemGroup>
-    <None Remove="Core\HarmonyMethodInterceptor.cs~RF215c6ca.TMP" />
-  </ItemGroup>
+		<GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+		<IncludeSymbols>true</IncludeSymbols>
+		<SymbolPackageFormat>snupkg</SymbolPackageFormat>
+		<PublishRepositoryUrl>true</PublishRepositoryUrl>
+		<EmbedUntrackedSources>true</EmbedUntrackedSources>
+		<DebugType>portable</DebugType>
+		<NoWarn>$(NoWarn);CS1591</NoWarn>
+	</PropertyGroup>
 
-  <ItemGroup>
-    <PackageReference Include="Castle.Core" Version="5.2.1" />
-    <PackageReference Include="Lib.Harmony" Version="2.3.6" />
-    <PackageReference Include="NSubstitute" Version="5.3.0" />
-  </ItemGroup>
+	<ItemGroup>
+		<None Include="../README.md" Pack="true" PackagePath="\" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Castle.Core" Version="5.2.1" />
+		<PackageReference Include="Lib.Harmony" Version="2.3.6" />
+		<PackageReference Include="NSubstitute" Version="5.3.0" />
+	</ItemGroup>
+
+	<!-- Development Dependencies -->
+	<ItemGroup>
+		<PackageReference Include="Microsoft.SourceLink.GitHub" Version="8.0.0" PrivateAssets="All" />
+		<PackageReference Include="MinVer" Version="4.3.0" PrivateAssets="All" />
+	</ItemGroup>
+
+	<!-- Conditional compilation symbols -->
+	<PropertyGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
+		<DefineConstants>$(DefineConstants);NETSTANDARD2_0</DefineConstants>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(TargetFramework)' == 'net6.0'">
+		<DefineConstants>$(DefineConstants);NET6_0_OR_GREATER</DefineConstants>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(TargetFramework)' == 'net7.0'">
+		<DefineConstants>$(DefineConstants);NET7_0_OR_GREATER</DefineConstants>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(TargetFramework)' == 'net8.0'">
+		<DefineConstants>$(DefineConstants);NET8_0_OR_GREATER</DefineConstants>
+	</PropertyGroup>
 
 </Project>
