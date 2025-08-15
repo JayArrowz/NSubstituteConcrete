@@ -7,6 +7,7 @@ public class CleanupDiagnostics
 {
     public int ActiveSubstituteCount { get; set; }
     public int CachedProxyTypeCount { get; set; }
+    public int StaticMethodCount { get; set; }
 
     /// <summary>
     /// Number of active Harmony interceptors
@@ -15,6 +16,6 @@ public class CleanupDiagnostics
 
     public override string ToString()
     {
-        return $"Active Substitutes: {ActiveSubstituteCount}, Harmony Interceptors: {HarmonyInterceptorCount}";
+        return $"Active Substitutes: {ActiveSubstituteCount}, Harmony Interceptors: {HarmonyInterceptorCount}, Static Methods: {StaticMethodCount}";
     }
 }

@@ -363,4 +363,25 @@ public partial class ConcreteSubstituteTests
     }
 
     #endregion
+
+    #region Static services
+    
+    [Fact]
+    public void Setup_WithStaticMethod_Works()
+    {
+        Static.Setup(() => MyStaticService.GetStaticName()).Returns("Test 123");
+        MyStaticService.GetStaticName().Should().Be("Test 123");
+        Static.ClearAll();
+        MyStaticService.GetStaticName().Should().Be("Real Static Name");
+    }
+
+    [Fact]
+    public void Setup_WithStaticMethodArgs_Works()
+    {
+        Static.Setup(() => MyStaticService.Calculate(1, 2)).Returns(1000);
+        MyStaticService.Calculate(1,2).Should().Be(1000);
+        MyStaticService.Calculate(3,2).Should().Be(5);
+        Static.ClearAll();
+    }
+    #endregion
 }

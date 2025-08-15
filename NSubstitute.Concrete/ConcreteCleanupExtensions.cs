@@ -28,6 +28,7 @@ public static class ConcreteCleanupExtensions
     public static void ClearAll()
     {
         ConcreteExtensions.ClearAllInterceptors();
+        Static.ClearAll(); // Also clear static method patches
     }
 
     /// <summary>
@@ -35,10 +36,12 @@ public static class ConcreteCleanupExtensions
     /// </summary>
     public static CleanupDiagnostics GetDiagnostics()
     {
+        var staticDiagnostics = Static.GetDiagnostics();
         return new CleanupDiagnostics
         {
             ActiveSubstituteCount = ConcreteExtensions.GetInterceptorCount(),
-            CachedProxyTypeCount = SubstituteExtensions.GetInterceptorCount() // Harmony interceptors
+            CachedProxyTypeCount = SubstituteExtensions.GetInterceptorCount(), // Harmony interceptors
+            StaticMethodCount = staticDiagnostics.PatchedMethodCount
         };
     }
 
