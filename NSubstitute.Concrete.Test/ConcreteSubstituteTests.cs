@@ -1,6 +1,6 @@
 using FluentAssertions;
 
-namespace NSubstitute.Concrete.Example;
+namespace NSubstitute.Concrete.Test;
 
 public partial class ConcreteSubstituteTests
 {

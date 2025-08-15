@@ -1,4 +1,4 @@
-﻿namespace NSubstitute.Concrete.Example;
+﻿namespace NSubstitute.Concrete.Test;
 
 public class SampleConcreteClass
 {
