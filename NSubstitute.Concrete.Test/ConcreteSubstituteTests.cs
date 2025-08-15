@@ -1,6 +1,7 @@
 using FluentAssertions;
 using NSubstitute.Concrete.Cleanup;
 using NSubstitute.Concrete.Core;
+using NSubstitute.Concrete.Test.Fixtures;
 using NSubstitute.Concrete.Utilities;
 
 namespace NSubstitute.Concrete.Test;

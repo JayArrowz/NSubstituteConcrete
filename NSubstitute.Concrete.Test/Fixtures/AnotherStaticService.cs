@@ -1,4 +1,4 @@
-﻿namespace NSubstitute.Concrete.Test;
+﻿namespace NSubstitute.Concrete.Test.Fixtures;
 
 public static class AnotherStaticService
 {

@@ -1,5 +1,6 @@
 ﻿using FluentAssertions;
 using NSubstitute.Concrete.Statics;
+using NSubstitute.Concrete.Test.Fixtures;
 using NSubstitute.Concrete.Utilities;
 
 namespace NSubstitute.Concrete.Test;
