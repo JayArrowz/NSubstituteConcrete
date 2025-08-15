@@ -41,7 +41,7 @@
 	<!-- Development Dependencies -->
 	<ItemGroup>
 		<PackageReference Include="Microsoft.SourceLink.GitHub" Version="8.0.0" PrivateAssets="All" />
-		<PackageReference Include="MinVer" Version="4.3.0" PrivateAssets="All" />
+		<PackageReference Include="MinVer" Version="6.0.0" PrivateAssets="All" />
 	</ItemGroup>
 
 	<!-- Conditional compilation symbols -->
