@@ -187,7 +187,7 @@ public partial class ConcreteSubstituteTests
     public void Verify_WrongCallCount_Throws()
     {
         var concrete = NSubstituteExtensions.ForConcrete<SampleConcreteClass>(1);
-        concrete.IncrementAndReturn(1);        
+        concrete.IncrementAndReturn(1);
         Assert.Throws<Exception>(() =>
             concrete.Verify(x => x.IncrementAndReturn(1), 2));
         concrete.Cleanup();
