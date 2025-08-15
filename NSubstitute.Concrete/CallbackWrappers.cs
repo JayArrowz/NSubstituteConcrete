@@ -36,16 +36,34 @@ public class CallbackWrapper : ICallbackWrapper
 public class CallbackWrapper<T1> : ICallbackWrapper
 {
     private readonly Action<T1> _callback;
+    private readonly Type _returnType;
 
-    public CallbackWrapper(Action<T1> callback)
+    public CallbackWrapper(Action<T1> callback, Type returnType = null)
     {
         _callback = callback;
+        _returnType = returnType;
     }
 
     public object Execute(object[] arguments)
     {
         var arg1 = arguments.Length > 0 ? (T1)arguments[0] : default(T1);
         _callback(arg1);
+
+        // For non-void methods, return a default value
+        if (_returnType != null && _returnType != typeof(void))
+        {
+            return GetDefaultValue(_returnType);
+        }
+
+        return null;
+    }
+
+    private static object GetDefaultValue(Type type)
+    {
+        if (type == typeof(void))
+            return null;
+        if (type.IsValueType)
+            return Activator.CreateInstance(type);
         return null;
     }
 }
@@ -56,10 +74,12 @@ public class CallbackWrapper<T1> : ICallbackWrapper
 public class CallbackWrapperT1T2<T1, T2> : ICallbackWrapper
 {
     private readonly Action<T1, T2> _callback;
+    private readonly Type _returnType;
 
-    public CallbackWrapperT1T2(Action<T1, T2> callback)
+    public CallbackWrapperT1T2(Action<T1, T2> callback, Type returnType = null)
     {
         _callback = callback;
+        _returnType = returnType;
     }
 
     public object Execute(object[] arguments)
@@ -67,6 +87,22 @@ public class CallbackWrapperT1T2<T1, T2> : ICallbackWrapper
         var arg1 = arguments.Length > 0 ? (T1)arguments[0] : default(T1);
         var arg2 = arguments.Length > 1 ? (T2)arguments[1] : default(T2);
         _callback(arg1, arg2);
+
+        // For non-void methods, return a default value
+        if (_returnType != null && _returnType != typeof(void))
+        {
+            return GetDefaultValue(_returnType);
+        }
+
+        return null;
+    }
+
+    private static object GetDefaultValue(Type type)
+    {
+        if (type == typeof(void))
+            return null;
+        if (type.IsValueType)
+            return Activator.CreateInstance(type);
         return null;
     }
 }
@@ -77,10 +113,12 @@ public class CallbackWrapperT1T2<T1, T2> : ICallbackWrapper
 public class CallbackWrapperT1T2T3<T1, T2, T3> : ICallbackWrapper
 {
     private readonly Action<T1, T2, T3> _callback;
+    private readonly Type _returnType;
 
-    public CallbackWrapperT1T2T3(Action<T1, T2, T3> callback)
+    public CallbackWrapperT1T2T3(Action<T1, T2, T3> callback, Type returnType = null)
     {
         _callback = callback;
+        _returnType = returnType;
     }
 
     public object Execute(object[] arguments)
@@ -89,6 +127,22 @@ public class CallbackWrapperT1T2T3<T1, T2, T3> : ICallbackWrapper
         var arg2 = arguments.Length > 1 ? (T2)arguments[1] : default(T2);
         var arg3 = arguments.Length > 2 ? (T3)arguments[2] : default(T3);
         _callback(arg1, arg2, arg3);
+
+        // For non-void methods, return a default value
+        if (_returnType != null && _returnType != typeof(void))
+        {
+            return GetDefaultValue(_returnType);
+        }
+
+        return null;
+    }
+
+    private static object GetDefaultValue(Type type)
+    {
+        if (type == typeof(void))
+            return null;
+        if (type.IsValueType)
+            return Activator.CreateInstance(type);
         return null;
     }
 }

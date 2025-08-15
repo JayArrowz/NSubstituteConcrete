@@ -76,19 +76,19 @@ public class StaticMethodSetup<TResult> : IStaticMethodSetup<TResult>
 
     public void Callback<T1>(Action<T1> callback)
     {
-        var wrapper = new CallbackWrapper<T1>(callback);
+        var wrapper = new CallbackWrapper<T1>(callback, typeof(TResult));
         StaticMethodInterceptor.Instance.ConfigureReturn(_method, _arguments, wrapper);
     }
 
     public void Callback<T1, T2>(Action<T1, T2> callback)
     {
-        var wrapper = new CallbackWrapperT1T2<T1, T2>(callback);
+        var wrapper = new CallbackWrapperT1T2<T1, T2>(callback, typeof(TResult));
         StaticMethodInterceptor.Instance.ConfigureReturn(_method, _arguments, wrapper);
     }
 
     public void Callback<T1, T2, T3>(Action<T1, T2, T3> callback)
     {
-        var wrapper = new CallbackWrapperT1T2T3<T1, T2, T3>(callback);
+        var wrapper = new CallbackWrapperT1T2T3<T1, T2, T3>(callback, typeof(TResult));
         StaticMethodInterceptor.Instance.ConfigureReturn(_method, _arguments, wrapper);
     }
 
