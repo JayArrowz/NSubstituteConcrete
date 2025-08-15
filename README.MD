@@ -25,7 +25,7 @@ dotnet add package NSubstituteConcrete
 ### Concrete Class Mocking
 
 ```csharp
-using NSubstituteConcrete;
+using NSubstitute.Concrete;
 
 public class UserService
 {
