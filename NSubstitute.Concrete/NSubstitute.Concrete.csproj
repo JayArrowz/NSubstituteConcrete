@@ -3,13 +3,13 @@
 	<PropertyGroup>
 		<TargetFramework>netstandard2.0</TargetFramework>
 		<LangVersion>12</LangVersion>
-		<PackageId>NSubstitute.Concrete</PackageId>
-		<Title>NSubstitute.Concrete</Title>
+		<PackageId>NSubstituteConcrete</PackageId>
+		<Title>NSubstituteConcrete</Title>
 		<Description>Extends NSubstitute to support mocking concrete classes and static methods using Harmony runtime patching. Mock non-virtual methods, static methods, and sealed classes with familiar NSubstitute syntax.</Description>
 		<Summary>Mock concrete classes and static methods with NSubstitute syntax using Harmony runtime patching</Summary>
 		<Authors>JayArrowz</Authors>
 		<Company>JayArrowz</Company>
-		<Product>NSubstitute.Concrete</Product>
+		<Product>NSubstituteConcrete</Product>
 		<Copyright>Copyright © JayArrowz 2024</Copyright>
 		<PackageProjectUrl>https://github.com/JayArrowz/NSubstituteConcrete</PackageProjectUrl>
 		<RepositoryUrl>https://github.com/JayArrowz/NSubstituteConcrete</RepositoryUrl>

@@ -3,7 +3,7 @@
 A .NET library that extends NSubstitute to support mocking concrete classes and static methods using Harmony runtime patching.
 
 [![Build Status](https://github.com/jayarrowz/NSubstituteConcrete/workflows/CI/badge.svg)](https://github.com/jayarrowz/NSubstituteConcrete/actions)
-[![NuGet](https://img.shields.io/nuget/v/NSubstitute.Concrete.svg)](https://www.nuget.org/packages/NSubstitute.Concrete)
+[![NuGet](https://img.shields.io/nuget/v/NSubstitute.Concrete.svg)](https://www.nuget.org/packages/NSubstituteConcrete)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 ## Features

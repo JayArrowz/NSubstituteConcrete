@@ -119,7 +119,7 @@ jobs:
         echo "|------|-------|" >> $GITHUB_STEP_SUMMARY
         echo "| **Version** | \`${{ steps.extract_version.outputs.version }}\` |" >> $GITHUB_STEP_SUMMARY
         echo "| **Tag** | \`${{ github.event.release.tag_name }}\` |" >> $GITHUB_STEP_SUMMARY
-        echo "| **NuGet Package** | [NSubstitute.Concrete v${{ steps.extract_version.outputs.version }}](https://www.nuget.org/packages/NSubstitute.Concrete/${{ steps.extract_version.outputs.version }}) |" >> $GITHUB_STEP_SUMMARY
+        echo "| **NuGet Package** | [NSubstituteConcrete v${{ steps.extract_version.outputs.version }}](https://www.nuget.org/packages/NSubstituteConcrete/${{ steps.extract_version.outputs.version }}) |" >> $GITHUB_STEP_SUMMARY
         echo "| **Release** | [${{ github.event.release.name }}](${{ github.event.release.html_url }}) |" >> $GITHUB_STEP_SUMMARY
         echo "" >> $GITHUB_STEP_SUMMARY
         echo "### 📦 Published Packages" >> $GITHUB_STEP_SUMMARY
@@ -143,8 +143,8 @@ jobs:
 
     - name: Notify success
       run: |
-        echo "🎉 Successfully published NSubstitute.Concrete v${{ steps.extract_version.outputs.version }} to NuGet!"
-        echo "📦 Package: https://www.nuget.org/packages/NSubstitute.Concrete/${{ steps.extract_version.outputs.version }}"
+        echo "🎉 Successfully published NSubstituteConcrete v${{ steps.extract_version.outputs.version }} to NuGet!"
+        echo "📦 Package: https://www.nuget.org/packages/NSubstituteConcrete/${{ steps.extract_version.outputs.version }}"
         echo "🏷️ Release: ${{ github.event.release.html_url }}"
 
   notify-failure:
