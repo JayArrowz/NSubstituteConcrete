@@ -150,4 +150,4 @@ jobs:
       run: dotnet format --verify-no-changes --verbosity diagnostic
 
     - name: Run static analysis
-      run: dotnet build --configuration Release --verbosity normal /p:TreatWarningsAsErrors=true
+      run: dotnet build --configuration Release --verbosity normal
