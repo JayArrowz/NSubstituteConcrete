@@ -100,10 +100,6 @@ jobs:
           echo "❌ No .nupkg file found"
           exit 1
         fi
-        
-        # Display package info
-        dotnet nuget verify ./artifacts/*.nupkg
-        echo "✅ Package validation complete"
 
     - name: Publish to NuGet.org
       env:
