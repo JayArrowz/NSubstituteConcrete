@@ -1,4 +1,4 @@
-# NSubstitute.Concrete
+# NSubstituteConcrete
 
 A .NET library that extends NSubstitute to support mocking concrete classes and static methods using Harmony runtime patching.
 
@@ -17,7 +17,7 @@ A .NET library that extends NSubstitute to support mocking concrete classes and 
 ## Installation
 
 ```bash
-dotnet add package NSubstitute.Concrete
+dotnet add package NSubstituteConcrete
 ```
 
 ## Usage
@@ -25,7 +25,7 @@ dotnet add package NSubstitute.Concrete
 ### Concrete Class Mocking
 
 ```csharp
-using NSubstitute.Concrete;
+using NSubstituteConcrete;
 
 public class UserService
 {
@@ -110,7 +110,7 @@ service.Cleanup();
 
 ## Comparison with Other Testing Libraries
 
-| Feature | NSubstitute.Concrete | Standard NSubstitute | Moq | TypeMock Isolator | Microsoft Fakes |
+| Feature | NSubstituteConcrete | Standard NSubstitute | Moq | TypeMock Isolator | Microsoft Fakes |
 |---------|:-------------------:|:-------------------:|:---:|:----------------:|:---------------:|
 | **Concrete classes** | ✅ All methods | ❌ Virtual only | ❌ Virtual only | ✅ All methods | ✅ All methods |
 | **Static methods** | ✅ Full support | ❌ Not supported | ❌ Not supported | ✅ Full support | ✅ Full support |
@@ -164,7 +164,7 @@ Static.ClearAll();
 ## Building
 
 ```bash
-git clone https://github.com/yourname/NSubstitute.Concrete.git
+git clone https://github.com/jayarrowz/NSubstituteConcrete.git
 cd NSubstitute.Concrete
 dotnet restore
 dotnet build
