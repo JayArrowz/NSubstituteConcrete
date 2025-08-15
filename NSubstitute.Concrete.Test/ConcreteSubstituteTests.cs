@@ -76,6 +76,7 @@ public partial class ConcreteSubstituteTests
 
         // Assert
         concrete.Call(x => x.Name).Should().Be("DirectSet");
+        concrete.GetProperty(x => x.Name).Should().Be("DirectSet");
         concrete.Cleanup();
     }
     #endregion
