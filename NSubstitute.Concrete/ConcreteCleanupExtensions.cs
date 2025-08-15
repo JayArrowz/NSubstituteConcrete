@@ -1,12 +1,12 @@
 ﻿namespace NSubstitute.Concrete;
 
 /// <summary>
-/// Extension methods for cleanup and resource management
+/// Extension methods for cleanup and resource management with Harmony support
 /// </summary>
 public static class ConcreteCleanupExtensions
 {
     /// <summary>
-    /// Remove a specific substitute from the interceptor registry
+    /// Remove a specific substitute from the interceptor registry and cleanup Harmony patches
     /// </summary>
     public static void Cleanup<T>(this T substitute) where T : class
     {
@@ -14,7 +14,7 @@ public static class ConcreteCleanupExtensions
     }
 
     /// <summary>
-    /// Clear all registered interceptors (useful for test cleanup)
+    /// Clear all registered interceptors and Harmony patches (useful for test cleanup)
     /// </summary>
     public static void ClearAllSubstitutes()
     {
@@ -22,37 +22,12 @@ public static class ConcreteCleanupExtensions
     }
 
     /// <summary>
-    /// Clear both substitute registry AND proxy type cache
+    /// Complete cleanup - clears all interceptors and Harmony patches
     /// Use this for complete cleanup in long-running applications
     /// </summary>
     public static void ClearAll()
     {
         ConcreteExtensions.ClearAllInterceptors();
-        SubstituteExtensions.ClearProxyTypeCache();
-    }
-
-    /// <summary>
-    /// Get reference count for a specific type
-    /// </summary>
-    public static int GetRefCount<T>() where T : class
-    {
-        return SubstituteExtensions.GetRefCount<T>();
-    }
-
-    /// <summary>
-    /// Clear proxy type cache only (frees memory from generated types)
-    /// </summary>
-    public static void ClearProxyCache()
-    {
-        SubstituteExtensions.ClearProxyTypeCache();
-    }
-
-    /// <summary>
-    /// Clear proxy cache for a specific type
-    /// </summary>
-    public static void ClearProxyCache<T>() where T : class
-    {
-        SubstituteExtensions.ClearProxyType<T>();
     }
 
     /// <summary>
@@ -63,7 +38,15 @@ public static class ConcreteCleanupExtensions
         return new CleanupDiagnostics
         {
             ActiveSubstituteCount = ConcreteExtensions.GetInterceptorCount(),
-            CachedProxyTypeCount = SubstituteExtensions.GetProxyTypeCacheCount()
+            CachedProxyTypeCount = SubstituteExtensions.GetInterceptorCount() // Harmony interceptors
         };
+    }
+
+    /// <summary>
+    /// Force cleanup of all Harmony patches (use sparingly)
+    /// </summary>
+    public static void ClearAllHarmonyPatches()
+    {
+        SubstituteExtensions.ClearAllInterceptors();
     }
 }

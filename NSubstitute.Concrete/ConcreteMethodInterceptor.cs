@@ -13,16 +13,16 @@ namespace NSubstitute.Concrete;
 public class ConcreteMethodInterceptor
 {
     // For methods configured without specific arguments (just method name)
-    private readonly Dictionary<string, object> _configuredReturns = new Dictionary<string, object>();
+    protected readonly Dictionary<string, object> _configuredReturns = new Dictionary<string, object>();
 
     // For methods configured with specific arguments - now supports multiple configurations per method
-    private readonly Dictionary<string, List<(object[] Arguments, object ReturnValue)>> _methodConfigurations =
+    protected readonly Dictionary<string, List<(object[] Arguments, object ReturnValue)>> _methodConfigurations =
         new Dictionary<string, List<(object[], object)>>();
 
     // For property values
-    private readonly Dictionary<string, object> _propertyValues = new Dictionary<string, object>();
+    protected readonly Dictionary<string, object> _propertyValues = new Dictionary<string, object>();
 
-    private readonly List<MethodCall> _receivedCalls = new List<MethodCall>();
+    protected readonly List<MethodCall> _receivedCalls = new List<MethodCall>();
     private object _proxy;
 
     public void SetProxy(object proxy)
@@ -202,7 +202,7 @@ public class ConcreteMethodInterceptor
         _propertyValues[propertyName] = value;
     }
 
-    private bool ArgumentsMatch(object[] setupArgs, object[] callArgs)
+    protected bool ArgumentsMatch(object[] setupArgs, object[] callArgs)
     {
         if (setupArgs == null && callArgs == null) return true;
         if (setupArgs == null || callArgs == null) return false;
@@ -243,7 +243,7 @@ public class ConcreteMethodInterceptor
     /// <summary>
     /// Clear all internal state to help with garbage collection
     /// </summary>
-    public void Cleanup()
+    public virtual void Cleanup()
     {
         _configuredReturns.Clear();
         _methodConfigurations.Clear();

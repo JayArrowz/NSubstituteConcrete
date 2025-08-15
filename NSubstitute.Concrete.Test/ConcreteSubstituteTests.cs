@@ -13,7 +13,7 @@ public partial class ConcreteSubstituteTests
         concrete.Setup(x => x.IncrementAndReturn(5)).Returns(10);
 
         // Act
-        var result = concrete.Call(x => x.IncrementAndReturn(5));
+        var result = concrete.IncrementAndReturn(5);
 
         // Assert
         result.Should().Be(10);
@@ -28,7 +28,7 @@ public partial class ConcreteSubstituteTests
         concrete.Setup(x => x.IncrementAndReturn(5)).Returns(10);
 
         // Act
-        var result = concrete.Call(x => x.IncrementAndReturn(3));
+        var result = concrete.IncrementAndReturn(3);
 
         // Assert
         result.Should().Be(4); // 1 (ID) + 3
@@ -37,15 +37,13 @@ public partial class ConcreteSubstituteTests
     [Fact]
     public void Setup_ReturnsInOrder_ReturnsSequence()
     {
-        // Arrange
         var concrete = SubstituteExtensions.ForConcrete<SampleConcreteClass>(1);
         concrete.Setup(x => x.IncrementAndReturn(0)).ReturnsInOrder(10, 20, 30);
 
-        // Act & Assert
-        concrete.Call(x => x.IncrementAndReturn(0)).Should().Be(10);
-        concrete.Call(x => x.IncrementAndReturn(0)).Should().Be(20);
-        concrete.Call(x => x.IncrementAndReturn(0)).Should().Be(30);
-        concrete.Call(x => x.IncrementAndReturn(0)).Should().Be(30); // Last value repeats
+        concrete.IncrementAndReturn(0).Should().Be(10);
+        concrete.IncrementAndReturn(0).Should().Be(20);
+        concrete.IncrementAndReturn(0).Should().Be(30);
+        concrete.IncrementAndReturn(0).Should().Be(30); // Last value repeats
         concrete.Cleanup();
     }
     #endregion
@@ -59,7 +57,7 @@ public partial class ConcreteSubstituteTests
         concrete.SetupProperty(x => x.Name).Returns("Test");
 
         // Act
-        var result = concrete.Call(x => x.Name);
+        var result = concrete.Name;
 
         // Assert
         result.Should().Be("Test");
@@ -75,8 +73,7 @@ public partial class ConcreteSubstituteTests
         concrete.SetProperty(x => x.Name, "DirectSet");
 
         // Assert
-        concrete.Call(x => x.Name).Should().Be("DirectSet");
-        concrete.GetProperty(x => x.Name).Should().Be("DirectSet");
+        concrete.Name.Should().Be("DirectSet");
         concrete.Cleanup();
     }
     #endregion
@@ -87,10 +84,10 @@ public partial class ConcreteSubstituteTests
     {
         // Arrange
         var concrete = SubstituteExtensions.ForConcrete<SampleConcreteClass>(1);
-        concrete.SetupAsync(x => x.GetDataAsync(1)).Returns(2);
+        concrete.Setup(x => x.GetDataAsync(1)).Returns(Task.FromResult(2));
 
         // Act
-        var result = await concrete.Call(x => x.GetDataAsync(1));
+        var result = await concrete.GetDataAsync(1);
 
         // Assert
         result.Should().Be(2);
@@ -100,15 +97,13 @@ public partial class ConcreteSubstituteTests
     [Fact]
     public async Task SetupAsync_WithTaskReturn_ReturnsConfiguredTask()
     {
-        // Arrange
         var concrete = SubstituteExtensions.ForConcrete<SampleConcreteClass>(1);
         var task = Task.FromResult(100);
+
         concrete.SetupAsync(x => x.GetDataAsync(10)).Returns(task);
 
-        // Act
-        var result = await concrete.Call(x => x.GetDataAsync(10));
+        var result = await concrete.GetDataAsync(10);
 
-        // Assert
         result.Should().Be(100);
         concrete.Cleanup();
     }
@@ -121,7 +116,7 @@ public partial class ConcreteSubstituteTests
         concrete.SetupAsync(x => x.GetDataAsync(2)).Throws<InvalidOperationException>();
 
         // Act
-        Func<Task> act = () => concrete.Call(x => x.GetDataAsync(2));
+        Func<Task> act = () => concrete.GetDataAsync(2);
 
         // Assert
         await act.Should().ThrowAsync<InvalidOperationException>();
@@ -140,7 +135,7 @@ public partial class ConcreteSubstituteTests
             .Callback(() => counter++);
 
         // Act
-        concrete.Call(x => x.DoSomething(0, ""));
+        concrete.DoSomething(0, "");
 
         // Assert
         counter.Should().Be(1);
@@ -162,7 +157,7 @@ public partial class ConcreteSubstituteTests
             });
 
         // Act
-        concrete.Call(x => x.DoSomething(5, "test"));
+        concrete.DoSomething(5, "test");
 
         // Assert
         receivedA.Should().Be(5);
@@ -184,7 +179,7 @@ public partial class ConcreteSubstituteTests
             });
 
         // Act
-        await concrete.Call(x => x.DoSomethingAsync());
+        await concrete.DoSomethingAsync();
 
         // Assert
         counter.Should().Be(1);
@@ -203,7 +198,7 @@ public partial class ConcreteSubstituteTests
             .Callback(() => counter++);
 
         // Act
-        concrete.Call(x => x.Abc(1));
+        concrete.Abc(1);
 
         // Assert
         counter.Should().Be(1);
@@ -219,7 +214,7 @@ public partial class ConcreteSubstituteTests
             .Throws<InvalidOperationException>();
 
         // Act
-        Action act = () => concrete.Call(x => x.Abc(99));
+        Action act = () => concrete.Abc(99);
 
         // Assert
         act.Should().Throw<InvalidOperationException>();
@@ -234,10 +229,12 @@ public partial class ConcreteSubstituteTests
         // Arrange
         var concrete = SubstituteExtensions.ForConcrete<SampleConcreteClass>(1);
 
+        concrete.Setup(t => t.IncrementAndReturn(1));
+
         // Act
-        concrete.Call(x => x.IncrementAndReturn(1));
-        concrete.Call(x => x.IncrementAndReturn(1));
-        concrete.Call(x => x.IncrementAndReturn(2));
+        concrete.IncrementAndReturn(1);
+        concrete.IncrementAndReturn(1);
+        concrete.IncrementAndReturn(2);
 
         // Assert
         concrete.Verify(x => x.IncrementAndReturn(1), 2);
@@ -249,8 +246,8 @@ public partial class ConcreteSubstituteTests
     {
         // Arrange
         var concrete = SubstituteExtensions.ForConcrete<SampleConcreteClass>(1);
-        concrete.Call(x => x.IncrementAndReturn(1));
-
+        concrete.IncrementAndReturn(1);
+        
         // Act & Assert
         Assert.Throws<Exception>(() =>
             concrete.Verify(x => x.IncrementAndReturn(1), 2));
@@ -322,7 +319,7 @@ public partial class ConcreteSubstituteTests
             .ReturnsAndCallback(10, () => callbackCount++);
 
         // Act
-        var result = concrete.Call(x => x.IncrementAndReturn(5));
+        var result = concrete.IncrementAndReturn(5);
 
         // Assert
         result.Should().Be(10);
@@ -341,7 +338,7 @@ public partial class ConcreteSubstituteTests
 
         // Act
         var start = DateTime.UtcNow;
-        await concrete.Call(x => x.DoSomethingAsync());
+        await concrete.DoSomethingAsync();
         var duration = DateTime.UtcNow - start;
 
         // Assert
@@ -360,8 +357,8 @@ public partial class ConcreteSubstituteTests
             .Returns(() => ++callCount * 10);
 
         // Act & Assert
-        concrete.Call(x => x.IncrementAndReturn(1)).Should().Be(10);
-        concrete.Call(x => x.IncrementAndReturn(1)).Should().Be(20);
+        concrete.IncrementAndReturn(1).Should().Be(10);
+        concrete.IncrementAndReturn(1).Should().Be(20);
         concrete.Cleanup();
     }
 
