@@ -5,6 +5,7 @@ A .NET library that extends NSubstitute to support mocking concrete classes and 
 [![Build Status](https://github.com/jayarrowz/NSubstituteConcrete/workflows/CI/badge.svg)](https://github.com/jayarrowz/NSubstituteConcrete/actions)
 [![NuGet](https://img.shields.io/nuget/v/NSubstituteConcrete.svg)](https://www.nuget.org/packages/NSubstituteConcrete)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Buy Me A Coffee](https://img.shields.io/badge/Buy%20Me%20A%20Coffee-support-yellow.svg)](https://buymeacoffee.com/jayarrowz)
 
 ## Features
 
@@ -191,6 +192,12 @@ NSubstitute.Concrete/
 5. Open a Pull Request
 
 Please ensure tests pass and add tests for new functionality.
+
+## ☕ Support
+
+If you find NSubstituteConcrete useful and want to support its development:
+
+[![Buy Me A Coffee](https://img.shields.io/badge/Buy%20Me%20A%20Coffee-support-yellow.svg)](https://buymeacoffee.com/jayarrowz)
 
 ## License
 
