@@ -1,6 +1,7 @@
 using FluentAssertions;
 using NSubstitute.Concrete.Cleanup;
 using NSubstitute.Concrete.Core;
+using NSubstitute.Concrete.Statics;
 using NSubstitute.Concrete.Test.Fixtures;
 using NSubstitute.Concrete.Utilities;
 
@@ -282,5 +283,19 @@ public partial class ConcreteSubstituteTests
         concrete.Cleanup();
     }
 
+    #endregion
+
+    #region Generic method tests
+    [Fact]
+    public void Setup_GenericConcreteMethod_Works()
+    {
+        var concrete = NSubstituteExtensions.ForConcrete<SampleConcreteClass>(1);
+        concrete.Setup(x => x.ProcessGeneric<string>("test"))
+            .Returns("mocked");
+
+        concrete.ProcessGeneric<string>("test").Should().Be("mocked");
+        concrete.ProcessGeneric<string>("other").Should().Be("other"); // Original behavior
+        concrete.ProcessGeneric<int>(123).Should().Be(123); // Different type, original behavior
+    }
     #endregion
 }

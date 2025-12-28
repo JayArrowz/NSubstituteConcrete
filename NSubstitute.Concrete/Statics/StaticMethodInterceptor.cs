@@ -138,10 +138,12 @@ public class StaticMethodInterceptor
         ref object __result)
     {
         var instance = Instance;
-        var methodKey = instance.GetMethodKey(__originalMethod as MethodInfo);
+        var method = __originalMethod as MethodInfo;
+
+        var methodKey = instance.GetMethodKeyForInterception(method, __args);
 
         // Always record the call
-        instance.RecordCall(__originalMethod as MethodInfo, __args);
+        instance.RecordCall(method, __args, methodKey);
 
         // Check if we have a configuration for this method
         if (instance.HasConfiguration(methodKey, __args))
@@ -163,10 +165,11 @@ public class StaticMethodInterceptor
         object[] __args)
     {
         var instance = Instance;
-        var methodKey = instance.GetMethodKey(__originalMethod as MethodInfo);
+        var method = __originalMethod as MethodInfo;
+        var methodKey = instance.GetMethodKeyForInterception(method, __args);
 
         // Always record the call
-        instance.RecordCall(__originalMethod as MethodInfo, __args);
+        instance.RecordCall(method, __args, methodKey);
 
         // Check if we have a configuration for this method
         if (instance.HasConfiguration(methodKey, __args))
@@ -179,11 +182,10 @@ public class StaticMethodInterceptor
         return true;
     }
 
-    private void RecordCall(MethodInfo method, object[] arguments)
+    private void RecordCall(MethodInfo method, object[] arguments, string methodKey)
     {
         if (method == null) return;
 
-        var methodKey = GetMethodKey(method);
         var calls = _receivedCalls.GetOrAdd(methodKey, _ => new List<MethodCall>());
 
         lock (calls)
@@ -280,6 +282,58 @@ public class StaticMethodInterceptor
         return true;
     }
 
+    /// <summary>
+    /// Gets the method key for use during interception.
+    /// For generic methods, Harmony may pass an open generic or a closed generic with wrong type arguments
+    /// (see https://harmony.pardeike.net/articles/patching-edgecases.html#generics).
+    /// This method infers the actual generic types from runtime argument values.
+    /// </summary>
+    private string GetMethodKeyForInterception(MethodInfo method, object[] args)
+    {
+        if (method == null) return string.Empty;
+        if (method.IsGenericMethod || method.IsGenericMethodDefinition)
+        {
+            var genericMethodDef = method.IsGenericMethodDefinition ? method : method.GetGenericMethodDefinition();
+            var parameters = genericMethodDef.GetParameters();
+            var genericParams = genericMethodDef.GetGenericArguments();
+            var inferredTypes = new Type[genericParams.Length];
+
+            // Try to infer generic type arguments from the actual argument values
+            if (args != null)
+            {
+                for (int i = 0; i < parameters.Length && i < args.Length; i++)
+                {
+                    var paramType = parameters[i].ParameterType;
+                    var arg = args[i];
+
+                    if (arg != null && paramType.IsGenericParameter)
+                    {
+                        var genericIndex = paramType.GenericParameterPosition;
+                        if (genericIndex < inferredTypes.Length)
+                        {
+                            inferredTypes[genericIndex] = arg.GetType();
+                        }
+                    }
+                }
+            }
+
+            if (inferredTypes.All(t => t != null))
+            {
+                try
+                {
+                    var closedMethod = genericMethodDef.MakeGenericMethod(inferredTypes);
+                    return GetMethodKey(closedMethod);
+                }
+                catch
+                {
+                    // Fall through to default behavior
+                }
+            }
+        }
+
+        return GetMethodKey(method);
+    }
+
     private string GetMethodKey(MethodInfo method)
     {
         if (method == null) return string.Empty;
@@ -287,7 +341,7 @@ public class StaticMethodInterceptor
         var parameters = string.Join(",", method.GetParameters().Select(p => p.ParameterType.FullName));
 
         var genericArgs = string.Empty;
-        if (method.IsGenericMethod)
+        if (method.IsGenericMethod && !method.IsGenericMethodDefinition)
         {
             var typeArgs = method.GetGenericArguments();
             genericArgs = $"<{string.Join(",", typeArgs.Select(t => t.FullName ?? t.Name))}>";

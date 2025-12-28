@@ -17,5 +17,7 @@ public class SampleConcreteClass
 
     public void Abc(int a) { }
 
+    public T ProcessGeneric<T>(T input) => input;
+    
     public Task DoSomethingAsync() => Task.CompletedTask;
 }
