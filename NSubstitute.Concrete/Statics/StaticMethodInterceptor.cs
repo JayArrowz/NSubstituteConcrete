@@ -1,10 +1,11 @@
-﻿using System;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using HarmonyLib;
 using NSubstitute.Concrete.Callbacks;
+using NSubstitute.Concrete.Core;
 using NSubstitute.Concrete.Utilities;
 
 namespace NSubstitute.Concrete.Statics;
@@ -22,12 +23,33 @@ public class StaticMethodInterceptor
     internal readonly ConcurrentDictionary<string, List<(object[] Arguments, object ReturnValue)>> _methodConfigurations = new ConcurrentDictionary<string, List<(object[], object)>>();
     private readonly ConcurrentDictionary<string, List<MethodCall>> _receivedCalls = new ConcurrentDictionary<string, List<MethodCall>>();
     internal readonly ConcurrentDictionary<MethodBase, bool> _patchedMethods = new ConcurrentDictionary<MethodBase, bool>();
-    private readonly object _callLock = new object();
+    private InterceptionFallback _fallback;
 
     private StaticMethodInterceptor()
     {
         _harmony = new Harmony("NSubstitute.Concrete.Static");
     }
+
+    /// <summary>
+    /// Installs the hook consulted when nothing configured here answers a static call. See
+    /// <see cref="InterceptionFallback"/>. Pass <c>null</c> to remove it.
+    /// </summary>
+    public void SetFallback(InterceptionFallback fallback)
+    {
+        _fallback = fallback;
+    }
+
+    /// <summary>Whether a fallback hook is installed.</summary>
+    public bool HasFallback => _fallback != null;
+
+    /// <summary>The static methods currently patched.</summary>
+    public IReadOnlyList<MethodBase> PatchedMethods => _patchedMethods.Keys.ToList().AsReadOnly();
+
+    /// <summary>The number of static methods currently patched.</summary>
+    public int PatchedMethodCount => _patchedMethods.Count;
+
+    /// <summary>The number of static methods that have at least one configured result.</summary>
+    public int ConfiguredMethodCount => _configuredReturns.Count + _methodConfigurations.Count;
 
     /// <summary>
     /// Patch a static method for interception
@@ -42,16 +64,7 @@ public class StaticMethodInterceptor
 
         try
         {
-            // Choose the right prefix based on whether method returns void
-            string prefixName = method.ReturnType == typeof(void)
-                ? nameof(VoidPrefixInterceptor)
-                : nameof(PrefixInterceptor);
-
-            var prefix = typeof(StaticMethodInterceptor).GetMethod(
-                prefixName,
-                BindingFlags.Static | BindingFlags.NonPublic);
-
-            _harmony.Patch(method, prefix: new HarmonyMethod(prefix));
+            _harmony.Patch(method, prefix: new HarmonyMethod(PrefixFor(method)));
             _patchedMethods[method] = true;
         }
         catch (Exception ex)
@@ -61,11 +74,54 @@ public class StaticMethodInterceptor
     }
 
     /// <summary>
+    /// Patches every static method and static property accessor of <paramref name="type"/>, so that
+    /// calls nobody configured are still observed. Required by anything that reasons about
+    /// unconfigured calls: strict behaviour, default-value providers, "no other calls" assertions.
+    /// </summary>
+    public void PatchAll(Type type)
+    {
+        if (type == null) throw new ArgumentNullException(nameof(type));
+
+        foreach (var method in InterceptableMethods(type))
+        {
+            try
+            {
+                PatchMethod(method);
+            }
+            catch (InvalidOperationException)
+            {
+                // A method Harmony cannot patch stays unpatched; the rest of the type is still
+                // worth intercepting.
+            }
+        }
+    }
+
+    /// <summary>The static methods of <paramref name="type"/> that are worth patching.</summary>
+    public static IEnumerable<MethodInfo> InterceptableMethods(Type type)
+    {
+        if (type == null) yield break;
+
+        const BindingFlags flags = BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.DeclaredOnly;
+
+        foreach (var method in type.GetMethods(flags))
+        {
+            if (method.IsPrivate && !method.IsFamily) continue;
+            if (!method.IsPublic && !method.IsFamily && !method.IsFamilyOrAssembly) continue;
+            if (method.IsGenericMethodDefinition) continue;
+            if ((method.GetMethodImplementationFlags() & MethodImplAttributes.InternalCall) != 0) continue;
+            if (method.GetMethodBody() == null) continue;
+            if (method.GetParameters().Any(p => p.ParameterType.IsByRef || p.ParameterType.IsPointer)) continue;
+
+            yield return method;
+        }
+    }
+
+    /// <summary>
     /// Configure a static method return value
     /// </summary>
     public void ConfigureReturn(MethodInfo method, object[] arguments, object returnValue)
     {
-        var methodKey = GetMethodKey(method);
+        var methodKey = MethodKeys.For(method);
 
         if (arguments == null || arguments.Length == 0)
         {
@@ -86,7 +142,7 @@ public class StaticMethodInterceptor
     /// </summary>
     public int GetCallCount(MethodInfo method, object[] arguments = null)
     {
-        var methodKey = GetMethodKey(method);
+        var methodKey = MethodKeys.For(method);
         if (!_receivedCalls.TryGetValue(methodKey, out var calls))
             return 0;
 
@@ -104,7 +160,7 @@ public class StaticMethodInterceptor
     /// </summary>
     public IReadOnlyList<MethodCall> GetCalls(MethodInfo method)
     {
-        var methodKey = GetMethodKey(method);
+        var methodKey = MethodKeys.For(method);
         if (!_receivedCalls.TryGetValue(methodKey, out var calls))
             return new List<MethodCall>().AsReadOnly();
 
@@ -112,6 +168,18 @@ public class StaticMethodInterceptor
         {
             return calls.ToList().AsReadOnly();
         }
+    }
+
+    /// <summary>Every recorded static call, in the order it was received.</summary>
+    public IReadOnlyList<MethodCall> GetAllCalls()
+    {
+        var all = new List<MethodCall>();
+        foreach (var calls in _receivedCalls.Values)
+        {
+            lock (calls) all.AddRange(calls);
+        }
+
+        return all.OrderBy(c => c.Ordinal).ToList().AsReadOnly();
     }
 
     /// <summary>
@@ -127,6 +195,81 @@ public class StaticMethodInterceptor
         _methodConfigurations.Clear();
         _receivedCalls.Clear();
         _patchedMethods.Clear();
+        _fallback = null;
+    }
+
+    /// <summary>
+    /// Unpatches every static method of <paramref name="type"/> and drops their configuration and
+    /// recorded calls, leaving statics patched on other types alone. Without this a scope covering
+    /// one type could only be torn down by tearing down every scope.
+    /// </summary>
+    public void ClearFor(Type type)
+    {
+        if (type == null) throw new ArgumentNullException(nameof(type));
+
+        foreach (var method in _patchedMethods.Keys.Where(m => m.DeclaringType == type).ToList())
+        {
+            ClearFor(method as MethodInfo);
+        }
+    }
+
+    /// <summary>
+    /// Unpatches one static method and drops its configuration and recorded calls.
+    /// </summary>
+    public void ClearFor(MethodInfo method)
+    {
+        if (method == null) return;
+
+        if (_patchedMethods.TryRemove(method, out _))
+        {
+            try
+            {
+                _harmony.Unpatch(method, PrefixFor(method));
+            }
+            catch (Exception)
+            {
+                // Already unpatched, or Harmony no longer holds the patch. Either way the
+                // configuration below is what makes the method behave normally again.
+            }
+        }
+
+        var methodKey = MethodKeys.For(method);
+        _configuredReturns.TryRemove(methodKey, out _);
+        _methodConfigurations.TryRemove(methodKey, out _);
+        _receivedCalls.TryRemove(methodKey, out _);
+    }
+
+    /// <summary>Drops recorded calls for every static method of <paramref name="type"/>.</summary>
+    public void ClearCallsFor(Type type)
+    {
+        if (type == null) throw new ArgumentNullException(nameof(type));
+
+        foreach (var method in _patchedMethods.Keys.Where(m => m.DeclaringType == type).ToList())
+        {
+            _receivedCalls.TryRemove(MethodKeys.For(method), out _);
+        }
+    }
+
+    /// <summary>Drops configured results for every static method of <paramref name="type"/>.</summary>
+    public void ClearSetupsFor(Type type)
+    {
+        if (type == null) throw new ArgumentNullException(nameof(type));
+
+        foreach (var method in _patchedMethods.Keys.Where(m => m.DeclaringType == type).ToList())
+        {
+            var methodKey = MethodKeys.For(method);
+            _configuredReturns.TryRemove(methodKey, out _);
+            _methodConfigurations.TryRemove(methodKey, out _);
+        }
+    }
+
+    private static MethodInfo PrefixFor(MethodInfo method)
+    {
+        var prefixName = method.ReturnType == typeof(void)
+            ? nameof(VoidPrefixInterceptor)
+            : nameof(PrefixInterceptor);
+
+        return typeof(StaticMethodInterceptor).GetMethod(prefixName, BindingFlags.Static | BindingFlags.NonPublic);
     }
 
     /// <summary>
@@ -138,21 +281,15 @@ public class StaticMethodInterceptor
         ref object __result)
     {
         var instance = Instance;
-        var methodKey = instance.GetMethodKey(__originalMethod as MethodInfo);
 
         // Always record the call
         instance.RecordCall(__originalMethod as MethodInfo, __args);
 
-        // Check if we have a configuration for this method
-        if (instance.HasConfiguration(methodKey, __args))
-        {
-            var result = instance.InterceptCall(methodKey, __args);
-            __result = result;
-            return false; // Skip original method
-        }
+        var outcome = instance.Answer(__originalMethod, __args);
+        if (ReferenceEquals(outcome, Interception.RunOriginal)) return true;
 
-        // Let the original method run
-        return true;
+        __result = outcome;
+        return false; // Skip original method
     }
 
     /// <summary>
@@ -163,27 +300,18 @@ public class StaticMethodInterceptor
         object[] __args)
     {
         var instance = Instance;
-        var methodKey = instance.GetMethodKey(__originalMethod as MethodInfo);
 
         // Always record the call
         instance.RecordCall(__originalMethod as MethodInfo, __args);
 
-        // Check if we have a configuration for this method
-        if (instance.HasConfiguration(methodKey, __args))
-        {
-            instance.InterceptCall(methodKey, __args);
-            return false; // Skip original method
-        }
-
-        // Let the original method run
-        return true;
+        return ReferenceEquals(instance.Answer(__originalMethod, __args), Interception.RunOriginal);
     }
 
     private void RecordCall(MethodInfo method, object[] arguments)
     {
         if (method == null) return;
 
-        var methodKey = GetMethodKey(method);
+        var methodKey = MethodKeys.For(method);
         var calls = _receivedCalls.GetOrAdd(methodKey, _ => new List<MethodCall>());
 
         lock (calls)
@@ -193,7 +321,8 @@ public class StaticMethodInterceptor
                 Method = method,
                 Arguments = arguments,
                 Target = null, // Static methods have no target
-                CalledAt = DateTime.UtcNow
+                CalledAt = DateTime.UtcNow,
+                Ordinal = Interception.NextOrdinal(),
             });
         }
     }
@@ -219,42 +348,51 @@ public class StaticMethodInterceptor
         return _configuredReturns.ContainsKey(methodKey);
     }
 
-    private object InterceptCall(string methodKey, object[] arguments)
+    /// <summary>Whether anything configured here can answer a call to <paramref name="method"/>.</summary>
+    public bool HasConfiguration(MethodInfo method, object[] arguments)
+        => HasConfiguration(MethodKeys.For(method), arguments);
+
+    /// <summary>
+    /// Answers a call from the configuration held here, deferring to the fallback and finally to
+    /// <see cref="Interception.RunOriginal"/> when nothing matches.
+    /// </summary>
+    private object Answer(MethodBase method, object[] arguments)
     {
-        // Check method configurations with arguments first
+        var methodKey = MethodKeys.For(method);
+
         if (_methodConfigurations.TryGetValue(methodKey, out var configs))
         {
             lock (configs)
             {
                 foreach (var config in configs)
                 {
-                    if (ArgumentsMatch(config.Arguments, arguments))
-                    {
-                        var returnValue = config.ReturnValue;
+                    if (!ArgumentsMatch(config.Arguments, arguments)) continue;
 
-                        if (returnValue is ICallbackWrapper wrapper)
-                        {
-                            return wrapper.Execute(arguments);
-                        }
-
-                        return returnValue;
-                    }
+                    return config.ReturnValue is ICallbackWrapper wrapper
+                        ? wrapper.Execute(arguments)
+                        : config.ReturnValue;
                 }
             }
         }
 
-        // Check simple method configurations
         if (_configuredReturns.TryGetValue(methodKey, out var configuredReturn))
         {
-            if (configuredReturn is ICallbackWrapper wrapper)
-            {
-                return wrapper.Execute(arguments);
-            }
-
-            return configuredReturn;
+            return configuredReturn is ICallbackWrapper wrapper
+                ? wrapper.Execute(arguments)
+                : configuredReturn;
         }
 
-        return null;
+        var fallback = _fallback;
+        return fallback == null ? Interception.RunOriginal : fallback(method, null, arguments);
+    }
+
+    /// <summary>
+    /// Answers a call the way the Harmony prefix does, for callers driving the interceptor directly.
+    /// </summary>
+    public object InterceptCall(MethodInfo method, object[] arguments)
+    {
+        RecordCall(method, arguments);
+        return Answer(method, arguments);
     }
 
     private bool ArgumentsMatch(object[] setupArgs, object[] callArgs)
@@ -278,21 +416,5 @@ public class StaticMethodInterceptor
             }
         }
         return true;
-    }
-
-    private string GetMethodKey(MethodInfo method)
-    {
-        if (method == null) return string.Empty;
-
-        var parameters = string.Join(",", method.GetParameters().Select(p => p.ParameterType.FullName));
-
-        var genericArgs = string.Empty;
-        if (method.IsGenericMethod)
-        {
-            var typeArgs = method.GetGenericArguments();
-            genericArgs = $"<{string.Join(",", typeArgs.Select(t => t.FullName ?? t.Name))}>";
-        }
-
-        return $"{method.DeclaringType?.FullName}.{method.Name}{genericArgs}({parameters})";
     }
 }

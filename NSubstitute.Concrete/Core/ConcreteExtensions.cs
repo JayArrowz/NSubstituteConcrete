@@ -8,6 +8,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Threading.Tasks;
+using NSubstitute.Concrete.Utilities;
 
 namespace NSubstitute.Concrete.Core;
 
@@ -16,8 +17,10 @@ namespace NSubstitute.Concrete.Core;
 /// </summary>
 public static class ConcreteExtensions
 {
+    // Keyed by identity: a substituted class that compares by value would otherwise let two
+    // distinct substitutes share one interceptor.
     private static readonly ConcurrentDictionary<object, ConcreteMethodInterceptor> _interceptors
-        = new ConcurrentDictionary<object, ConcreteMethodInterceptor>();
+        = new ConcurrentDictionary<object, ConcreteMethodInterceptor>(ReferenceComparer.Instance);
 
     /// <summary>
     /// Configure method to return a specific value using expression with auto-patching
@@ -385,7 +388,7 @@ where T : class
 
     #region Internal Registry Management
 
-    internal static void RegisterInterceptor(object substitute, ConcreteMethodInterceptor interceptor)
+    public static void RegisterInterceptor(object substitute, ConcreteMethodInterceptor interceptor)
     {
         _interceptors[substitute] = interceptor;
     }
@@ -393,7 +396,7 @@ where T : class
     /// <summary>
     /// Remove a specific substitute from the registry
     /// </summary>
-    internal static void UnregisterInterceptor(object substitute)
+    public static void UnregisterInterceptor(object substitute)
     {
         if (_interceptors.TryRemove(substitute, out var interceptor))
         {
@@ -407,7 +410,7 @@ where T : class
     /// <summary>
     /// Clear all registered interceptors
     /// </summary>
-    internal static void ClearAllInterceptors()
+    public static void ClearAllInterceptors()
     {
         foreach (var interceptor in _interceptors.Values)
         {
@@ -422,7 +425,7 @@ where T : class
     /// <summary>
     /// Get the count of registered interceptors
     /// </summary>
-    internal static int GetInterceptorCount()
+    public static int GetInterceptorCount()
     {
         return _interceptors.Count;
     }

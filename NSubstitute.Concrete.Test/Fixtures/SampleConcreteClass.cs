@@ -3,7 +3,7 @@
 public class SampleConcreteClass
 {
     public int Id { get; }
-    public string Name { get; set; }
+    public string? Name { get; set; }
 
     public SampleConcreteClass(int id) => Id = id;
 

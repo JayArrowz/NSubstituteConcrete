@@ -145,12 +145,57 @@ substitute.Cleanup();
 Static.ClearAll();
 ```
 
+## Hosting this library
+
+A library layering its own setup and verification API over this one drives the interceptors directly
+rather than through `Setup`. The seams for that are:
+
+| Seam | What it is for |
+| --- | --- |
+| `NSubstituteExtensions.GetHarmonyInterceptor(substitute)` | Reaches the interceptor behind a concrete substitute. |
+| `HarmonyMethodInterceptor.PatchAll()` / `StaticMethodInterceptor.PatchAll(type)` | Patches the whole surface, so calls nobody configured are still observed. |
+| `SetFallback(InterceptionFallback)` on either interceptor | Answers a call nothing else configured. Return `Interception.RunOriginal` to let the real method run; anything else, including `null`, becomes the result. |
+| `MethodCall.Ordinal` | Orders calls across every interceptor in the process. `CalledAt` has no useful resolution for this. |
+| `StaticMethodInterceptor.ClearFor(type)` / `ClearFor(method)` | Unpatches one type's — or one method's — statics, leaving other patches alone. |
+| `MethodKeys.For(method)` | The signature key configuration and call records are filed under. |
+
+## Release notes
+
+### Unreleased
+
+- **`Verify` counted calls to the wrong method.** `HarmonyMethodInterceptor.GetCallCount` was declared
+  `new` rather than `override`, so a call through the base type ran the base implementation — which
+  ignored the method entirely and counted every call whose arguments matched. `GetCallCount` and
+  `GetReceivedCalls` are now `virtual`/`override`, and both compare the method as well as the arguments.
+- **Configuration was keyed on the method name.** Two overloads shared one bucket, and
+  `InterceptCall(string, …)` could not tell them apart. Both interceptors now key on the full
+  signature through the new `MethodKeys` helper, which the static side already did.
+- **Recorded calls carried no usable ordering.** `MethodCall` gains `Ordinal`, stamped from a
+  process-wide counter, and `CalledAt` is now set on the instance side too.
+- **Statics could only be cleared globally.** `StaticMethodInterceptor` gains `ClearFor(Type)`,
+  `ClearFor(MethodInfo)`, `ClearCallsFor`, `ClearSetupsFor`, `PatchAll(Type)` and read-only views of
+  the patched set, so a scope covering one type can be torn down on its own.
+- **No way to patch a type's whole surface.** `HarmonyMethodInterceptor.PatchAll()` patches public and
+  protected instance methods and property accessors, excluding `object`'s own members.
+- **The substitute registries used value equality and leaked.** They now key on identity, so a mocked
+  class that overrides `Equals`/`GetHashCode` no longer collides with another instance of itself, and
+  `Unpatch` drops the strong reference to the substitute.
+- **Two substitutes of the same type patched the same method twice**, so a single call was intercepted
+  and recorded twice. Instance patches are now reference-counted behind one shared Harmony instance.
+- **The "no match after all" path called the wrong method.** It reflected onto `_proxy.GetType().BaseType`,
+  which is right for a generated proxy and wrong for the real instance the Harmony path uses. The
+  prefix now returns `true` and lets the original run.
+- **No fallback hook.** `SetFallback` on both interceptors is the seam a host library needs for strict
+  behaviour, default-value providers and its own setup engine.
+
 ## Limitations
 
 - **Method inlining**: Aggressively optimized methods may be inlined and cannot be patched
 - **Generic methods**: Generic method patches may affect all type instantiations
 - **Native methods**: P/Invoke and external methods cannot be patched
 - **Static constructors**: May run at unexpected times during patching
+- **Patches are process-wide**: a patch applies to the method, not to one instance. The prefix filters
+  by instance, but test collections touching the same static type must be serialised.
 
 ## Requirements
 

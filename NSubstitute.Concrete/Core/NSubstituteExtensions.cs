@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using NSubstitute.Concrete.Utilities;
 
 namespace NSubstitute.Concrete.Core;
 
@@ -8,8 +9,10 @@ namespace NSubstitute.Concrete.Core;
 /// </summary>
 public static class NSubstituteExtensions
 {
+    // Keyed by identity: a substituted class that compares by value would otherwise let two
+    // distinct substitutes share one interceptor.
     private static readonly ConcurrentDictionary<object, HarmonyMethodInterceptor> _interceptors
-        = new ConcurrentDictionary<object, HarmonyMethodInterceptor>();
+        = new ConcurrentDictionary<object, HarmonyMethodInterceptor>(ReferenceComparer.Instance);
 
     /// <summary>
     /// Creates a substitute for a concrete class using Harmony runtime patching.
@@ -49,10 +52,21 @@ public static class NSubstituteExtensions
     }
 
     /// <summary>
-    /// Get the Harmony interceptor for a substitute (internal use)
+    /// Get the Harmony interceptor for a substitute, or <c>null</c> if it is not one of ours.
+    /// <para>
+    /// Public because a host library layering its own setup and verification over this one needs the
+    /// interceptor to patch further members, install a fallback and read recorded calls.
+    /// </para>
     /// </summary>
-    internal static HarmonyMethodInterceptor GetHarmonyInterceptor<T>(T substitute) where T : class
+    public static HarmonyMethodInterceptor GetHarmonyInterceptor<T>(T substitute) where T : class
+        => GetHarmonyInterceptor((object)substitute);
+
+    /// <summary>
+    /// Get the Harmony interceptor for a substitute, or <c>null</c> if it is not one of ours.
+    /// </summary>
+    public static HarmonyMethodInterceptor GetHarmonyInterceptor(object substitute)
     {
+        if (substitute == null) return null;
         _interceptors.TryGetValue(substitute, out var interceptor);
         return interceptor;
     }
@@ -60,7 +74,7 @@ public static class NSubstituteExtensions
     /// <summary>
     /// Remove a specific substitute from the registry and cleanup Harmony patches
     /// </summary>
-    internal static void UnregisterInterceptor(object substitute)
+    public static void UnregisterInterceptor(object substitute)
     {
         if (_interceptors.TryRemove(substitute, out var interceptor))
         {
@@ -71,7 +85,7 @@ public static class NSubstituteExtensions
     /// <summary>
     /// Clear all registered interceptors and Harmony patches
     /// </summary>
-    internal static void ClearAllInterceptors()
+    public static void ClearAllInterceptors()
     {
         foreach (var interceptor in _interceptors.Values)
         {
@@ -83,7 +97,7 @@ public static class NSubstituteExtensions
     /// <summary>
     /// Get the count of registered Harmony interceptors
     /// </summary>
-    internal static int GetInterceptorCount()
+    public static int GetInterceptorCount()
     {
         return _interceptors.Count;
     }

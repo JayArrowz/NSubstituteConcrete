@@ -425,9 +425,11 @@ public class StaticMethodTests
     [Fact]
     public void Setup_NullArguments_Works()
     {
+#pragma warning disable CS8625 // Cannot convert null literal to non-nullable reference type.
         Static.Setup(() => MyStaticService.IsValid(null)).Returns(false);
 
         MyStaticService.IsValid(null).Should().BeFalse();
+#pragma warning restore CS8625 // Cannot convert null literal to non-nullable reference type.
         MyStaticService.IsValid("test").Should().BeTrue(); // Original behavior
     }
 

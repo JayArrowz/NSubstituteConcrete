@@ -127,9 +127,8 @@ public static class Static
     {
         return new StaticDiagnostics
         {
-            PatchedMethodCount = StaticMethodInterceptor.Instance._patchedMethods.Count,
-            ConfiguredMethodCount = StaticMethodInterceptor.Instance._configuredReturns.Count +
-                                  StaticMethodInterceptor.Instance._methodConfigurations.Count
+            PatchedMethodCount = StaticMethodInterceptor.Instance.PatchedMethodCount,
+            ConfiguredMethodCount = StaticMethodInterceptor.Instance.ConfiguredMethodCount
         };
     }
 
